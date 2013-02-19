@@ -39,6 +39,7 @@ import com.netflix.simianarmy.aws.janitor.rule.asg.DummyASGInstanceValidator;
 import com.netflix.simianarmy.aws.janitor.rule.asg.OldEmptyASGRule;
 import com.netflix.simianarmy.aws.janitor.rule.asg.SuspendedASGRule;
 import com.netflix.simianarmy.aws.janitor.rule.instance.OrphanedInstanceRule;
+import com.netflix.simianarmy.aws.janitor.rule.instance.NoOwnerInstanceRule;
 import com.netflix.simianarmy.aws.janitor.rule.launchconfig.OldUnusedLaunchConfigRule;
 import com.netflix.simianarmy.aws.janitor.rule.snapshot.NoGeneratedAMIRule;
 import com.netflix.simianarmy.aws.janitor.rule.volume.OldDetachedVolumeRule;
@@ -178,6 +179,12 @@ public class BasicJanitorMonkeyContext extends BasicSimianArmyContext implements
 
     private InstanceJanitor getInstanceJanitor() {
         JanitorRuleEngine ruleEngine = new BasicJanitorRuleEngine();
+        if (configuration().getBoolOrElse("simianarmy.janitor.rule.noOwnerInstanceRule.enabled", false)) {
+            ruleEngine.addRule(new NoOwnerInstanceRule(monkeyCalendar,
+                    (int) configuration().getNumOrElse(
+                            "simianarmy.janitor.rule.noOwnerInstanceRule.retentionDays", 2)
+                            ));
+        }
         if (configuration().getBoolOrElse("simianarmy.janitor.rule.orphanedInstanceRule.enabled", false)) {
             ruleEngine.addRule(new OrphanedInstanceRule(monkeyCalendar,
                     (int) configuration().getNumOrElse(
